@@ -4,67 +4,40 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
+
+	"asciart/asciart"
 )
 
 func main() {
+	// Check if the correct number of arguments is provided
 	if len(os.Args) != 2 {
-		fmt.Println("usage : go run main.go \"Your text here\"")
+		fmt.Println("Usage : go run main.go \"Your text here\"")
 		return
 	}
+	// Try to open the font files in order: standard, shadow, thinkertoy
 	file, err := os.Open("standard.txt")
 	if err != nil {
-		fmt.Println("error :", err)
+		file, err = os.Open("shadow.txt")
+		if err != nil {
+			file, err = os.Open("thinkertoy.txt")
+			if err != nil {
+				fmt.Println("Error: failed to open any files")
+				return
+			}
+		}
 	}
-
+	// Ensure the file is closed after finishing
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	// Create a scanner to read the font file
+	Scanner := bufio.NewScanner(file)
 
-	asci := [][]string{}
-	asci_line := []string{}
-	
-	started := false
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" && !started {
-			continue
-		}
-		if line == "" {
-			asci = append(asci, asci_line)
-			asci_line = []string{}
+	// Parse the ASCII art table from the font file
+	asci_table := asciart.ParseAsci(Scanner)
 
-		} else {
+	// Split the input string by new lines
+	newstring := asciart.Split_with_new_line(os.Args[1])
 
-			asci_line = append(asci_line, line)
-			started = true
-		}
-
-	}
-	fmt.Println("goooooo****")
-	fmt.Println(len(asci))
-	fmt.Println(len(asci_line))
-	fmt.Println(asci_line)
-	if len(asci_line) > 0 {
-		asci = append(asci, asci_line)
-	}
-
-	input := os.Args[1]
-	lines := strings.Split(input, "\\n")
-
-	if lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	for k := 0; k < len(lines); k++ {
-		for i := 0; i < 8; i++ {
-			for j := 0; j < len(lines[k]); j++ {
-				m := (lines[k][j] - 32)
-				fmt.Print(asci[m][i])
-			}
-			fmt.Println()
-			if len(lines[k]) == 0 {
-				break
-			}
-		}
-	}
+	// Print the ASCII art for the input string
+	asciart.PrintAsci(newstring, asci_table)
 }
